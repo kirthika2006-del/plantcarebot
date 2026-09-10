@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PlantCareBot AI</title>
+<style>
+  :root {
+    --bg: #0B140D;
+    --sidebar: #0E1A11;
+    --surface: #16241B;
+    --surface-2: #1D2F22;
+    --card: #17251C;
+    --border: #263A2B;
+    --text: #EAF2EA;
+    --text-muted: #8FA694;
+    --leaf: #7ED957;
+    --leaf-dim: #4E9A38;
+    --sun: #F0B84B;
+    --blue: #4E9EF0;
+    --violet: #A07EF0;
+    --pink: #F06B9E;
+    --orange: #F0954B;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 14px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--leaf), var(--leaf-dim));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .brand-icon svg { width: 20px; height: 20px; }
+
+  .brand-text h1 {
+    font-size: 15px;
+    margin: 0;
+  }
+
+  .brand-text p {
+    margin: 1px 0 0;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-size: 13.5px;
+    cursor: pointer;
+    margin-bottom: 2px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .nav-item svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(126,217,87,0.22), rgba(78,154,56,0.14));
+    color: var(--text);
+    border: 1px solid rgba(126,217,87,0.3);
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* ---------- Main ---------- */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .hero {
+    position: relative;
+    padding: 34px 34px 24px;
+    background:
+      radial-gradient(circle at top right, rgba(126,217,87,0.10) 0%, transparent 55%),
+      var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .hero-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--leaf), var(--leaf-dim));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .hero-icon svg { width: 28px; height: 28px; }
+
+  .hero-top h2 {
+    font-size: 30px;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .hero-top h2 span { color: var(--leaf); }
+
+  .hero-sub {
+    margin: 10px 0 0;
+    font-size: 14.5px;
+    color: var(--text-muted);
+    max-width: 560px;
+    line-height: 1.5;
+  }
+
+  .try-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    margin: 22px 0 10px;
+    color: var(--text);
+  }
+
+  .try-label svg { width: 15px; height: 15px; color: var(--sun); }
+
+  .suggestion-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .sugg-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+
+  .sugg-card:hover { border-color: var(--leaf); transform: translateY(-1px); }
+
+  .sugg-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sugg-icon svg { width: 17px; height: 17px; }
+
+  .sugg-text { flex: 1; min-width: 0; }
+  .sugg-text strong { display: block; font-size: 13px; font-weight: 600; }
+  .sugg-text span { display: block; font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+
+  .sugg-arrow { width: 14px; height: 14px; color: var(--text-muted); flex-shrink: 0; }
+
+  /* ---------- Chat ---------- */
+  .chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 34px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .chat-area::-webkit-scrollbar { width: 6px; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+  .msg-row { display: flex; gap: 10px; max-width: 72%; }
+  .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .avatar.bot { background: linear-gradient(135deg, var(--leaf), var(--leaf-dim)); }
+  .avatar.bot svg { width: 17px; height: 17px; }
+  .avatar.user { background: var(--surface-2); }
+  .avatar.user svg { width: 16px; height: 16px; color: var(--text-muted); }
+
+  .bubble-col { display: flex; flex-direction: column; }
+  .msg-row.user .bubble-col { align-items: flex-end; }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .msg-row.bot .bubble {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+  }
+
+  .msg-row.user .bubble {
+    background: #2C5A22;
+    border: 1px solid rgba(126,217,87,0.35);
+    border-top-right-radius: 4px;
+  }
+
+  .bubble img.attached {
+    max-width: 220px;
+    border-radius: 10px;
+    display: block;
+    margin-top: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .timestamp {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    padding: 0 4px;
+  }
+
+  .typing { display: inline-flex; gap: 4px; padding: 4px 2px; }
+  .typing span {
+    width: 6px; height: 6px; background: var(--leaf); border-radius: 50%;
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  /* ---------- Input ---------- */
+  .input-area {
+    padding: 14px 34px 22px;
+    border-top: 1px solid var(--border);
+  }
+
+  .preview-row {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    max-width: 320px;
+  }
+
+  .preview-row img { width: 34px; height: 34px; object-fit: cover; border-radius: 6px; }
+  .preview-row .remove-btn {
+    margin-left: auto; cursor: pointer; color: #FF6B6B; font-size: 13px;
+    background: none; border: none;
+  }
+
+  .input-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 6px 6px 18px;
+  }
+
+  .input-bar:focus-within {
+    border-color: var(--leaf);
+    box-shadow: 0 0 0 3px rgba(126, 217, 87, 0.12);
+  }
+
+  #messageInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 14px;
+    padding: 10px 0;
+    font-family: inherit;
+  }
+
+  #messageInput::placeholder { color: var(--text-muted); }
+
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .icon-btn:hover { color: var(--leaf); }
+
+  .send-btn {
+    background: linear-gradient(135deg, var(--leaf), var(--leaf-dim));
+    color: #0D2408;
+  }
+
+  .send-btn:hover { filter: brightness(1.08); color: #0D2408; }
+  .send-btn:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .suggestion-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 560px) {
+    .hero { padding: 22px 18px 18px; }
+    .chat-area { padding: 18px; }
+    .input-area { padding: 12px 18px 18px; }
+    .suggestion-grid { grid-template-columns: 1fr; }
+    .msg-row { max-width: 90%; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 21C12 21 5 16.5 5 10.5C5 7.46 7.46 5 10.5 5C11.6 5 12.6 5.34 13.42 5.92C13.9 4.28 15.4 3 17.2 3C19.6 3 21.5 4.9 21.5 7.3C21.5 12.5 15.5 16.5 12 21Z" stroke="#0D2408" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>PlantCareBot AI</h1>
+        <p>Your Plant Care Guide</p>
+      </div>
+    </div>
+
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      New Chat
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      Discover
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
+      Plant Ideas
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Favorites
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Recent Chats
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      About
+    </div>
+
+    <div class="sidebar-footer">PlantCareBot AI &middot; v1.0</div>
+  </div>
+
+  <div class="main">
+    <div class="hero">
+      <div class="hero-top">
+        <div class="hero-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 21C12 21 5 16.5 5 10.5C5 7.46 7.46 5 10.5 5C11.6 5 12.6 5.34 13.42 5.92C13.9 4.28 15.4 3 17.2 3C19.6 3 21.5 4.9 21.5 7.3C21.5 12.5 15.5 16.5 12 21Z" stroke="#0D2408" stroke-width="1.6" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>PlantCareBot <span>AI</span></h2>
+      </div>
+      <p class="hero-sub">Ask about plant care, get watering tips, identify pests, explore plant types, and more — all in one place!</p>
+
+      <div class="try-label">
+        <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg>
+        Try asking me...
+      </div>
+
+      <div class="suggestion-grid">
+        <div class="sugg-card" onclick="fillSuggestion(this)" data-text="What's wrong with my plant?">
+          <div class="sugg-icon" style="background: rgba(78,158,240,0.16);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4.5 8-11.8A8 8 0 0 0 4 10.2C4 17.5 12 22 12 22z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          </div>
+          <div class="sugg-text"><strong>Diagnose a plant</strong><span>"Why are my leaves yellow?"</span></div>
+          <svg class="sugg-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+
+        <div class="sugg-card" onclick="fillSuggestion(this)" data-text="Best low-maintenance indoor plants">
+          <div class="sugg-icon" style="background: rgba(160,126,240,0.16);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--violet)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg>
+          </div>
+          <div class="sugg-text"><strong>By plant type</strong><span>"Best low-light houseplants"</span></div>
+          <svg class="sugg-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+
+        <div class="sugg-card" onclick="fillSuggestion(this)" data-text="How do I water a snake plant?">
+          <div class="sugg-icon" style="background: rgba(126,217,87,0.16);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--leaf)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C12 2 6 9 6 14a6 6 0 0 0 12 0c0-5-6-12-6-12z"/></svg>
+          </div>
+          <div class="sugg-text"><strong>Watering tips</strong><span>"How often should I water?"</span></div>
+          <svg class="sugg-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+
+        <div class="sugg-card" onclick="fillSuggestion(this)" data-text="What is monstera deliciosa?">
+          <div class="sugg-icon" style="background: rgba(240,149,75,0.16);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+          </div>
+          <div class="sugg-text"><strong>Plant details</strong><span>"What is a monstera?"</span></div>
+          <svg class="sugg-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+
+        <div class="sugg-card" onclick="fillSuggestion(this)" data-text="Top 5 easiest plants for beginners">
+          <div class="sugg-icon" style="background: rgba(240,107,158,0.16);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div class="sugg-text"><strong>Beginner picks</strong><span>"Easiest plants to start with"</span></div>
+          <svg class="sugg-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+
+        <div class="sugg-card" onclick="fillSuggestion(this)" data-text="Suggest a plant for a shady balcony">
+          <div class="sugg-icon" style="background: rgba(240,184,75,0.16);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--sun)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z"/></svg>
+          </div>
+          <div class="sugg-text"><strong>Plant ideas</strong><span>"Plant for a shady balcony"</span></div>
+          <svg class="sugg-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-area" id="messages"></div>
+
+    <div class="input-area">
+      <div class="preview-row" id="previewRow">
+        <img id="previewImg" src="" alt="attached image" />
+        <span id="previewName">image.png</span>
+        <button class="remove-btn" onclick="removeImage()">Remove</button>
+      </div>
+      <div class="input-bar">
+        <button class="icon-btn" id="attachBtn" title="Attach image">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95L9.41 17.4a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49"/>
+          </svg>
+        </button>
+        <input type="file" id="imageInput" accept="image/*" style="display:none" />
+        <input type="text" id="messageInput" placeholder="Type your message..." />
+        <button class="icon-btn send-btn" id="sendBtn" title="Send">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const messagesEl = document.getElementById('messages');
+  const inputEl = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const attachBtn = document.getElementById('attachBtn');
+  const imageInput = document.getElementById('imageInput');
+  const previewRow = document.getElementById('previewRow');
+  const previewImg = document.getElementById('previewImg');
+  const previewName = document.getElementById('previewName');
+
+  let selectedImage = null;
+
+  attachBtn.addEventListener('click', () => imageInput.click());
+
+  imageInput.addEventListener('change', () => {
+    const file = imageInput.files[0];
+    if (!file) return;
+    selectedImage = file;
+    previewImg.src = URL.createObjectURL(file);
+    previewName.textContent = file.name;
+    previewRow.style.display = 'flex';
+  });
+
+  function removeImage() {
+    selectedImage = null;
+    imageInput.value = '';
+    previewRow.style.display = 'none';
+  }
+
+  function fillSuggestion(el) {
+    inputEl.value = el.getAttribute('data-text');
+    inputEl.focus();
+  }
+
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  sendBtn.addEventListener('click', sendMessage);
+
+  function currentTime() {
+    const d = new Date();
+    let h = d.getHours();
+    const m = d.getMinutes().toString().padStart(2, '0');
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + ':' + m + ' ' + ampm;
+  }
+
+  function botAvatarSvg() {
+    return '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21C12 21 5 16.5 5 10.5C5 7.46 7.46 5 10.5 5C11.6 5 12.6 5.34 13.42 5.92C13.9 4.28 15.4 3 17.2 3C19.6 3 21.5 4.9 21.5 7.3C21.5 12.5 15.5 16.5 12 21Z" fill="#0D2408"/></svg>';
+  }
+
+  function userAvatarSvg() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
+  }
+
+  function addMessage(role, text, imageUrl) {
+    const row = document.createElement('div');
+    row.className = 'msg-row ' + role;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar ' + role;
+    avatar.innerHTML = role === 'user' ? userAvatarSvg() : botAvatarSvg();
+
+    const col = document.createElement('div');
+    col.className = 'bubble-col';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+
+    if (imageUrl) {
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.className = 'attached';
+      bubble.appendChild(img);
+    }
+
+    const time = document.createElement('div');
+    time.className = 'timestamp';
+    time.textContent = currentTime();
+
+    col.appendChild(bubble);
+    col.appendChild(time);
+    row.appendChild(avatar);
+    row.appendChild(col);
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return bubble;
+  }
+
+  function addTypingIndicator() {
+    const row = document.createElement('div');
+    row.className = 'msg-row bot';
+    row.id = 'typingRow';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar bot';
+    avatar.innerHTML = botAvatarSvg();
+
+    const col = document.createElement('div');
+    col.className = 'bubble-col';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+
+    col.appendChild(bubble);
+    row.appendChild(avatar);
+    row.appendChild(col);
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function removeTypingIndicator() {
+    const row = document.getElementById('typingRow');
+    if (row) row.remove();
+  }
+
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text && !selectedImage) return;
+
+    const imageUrl = selectedImage ? URL.createObjectURL(selectedImage) : null;
+    addMessage('user', text, imageUrl);
+
+    const formData = new FormData();
+    formData.append('message', text);
+    if (selectedImage) formData.append('image', selectedImage);
+
+    inputEl.value = '';
+    removeImage();
+    sendBtn.disabled = true;
+    addTypingIndicator();
+
+    try {
+      const res = await fetch('/chat', { method: 'POST', body: formData });
+      const data = await res.json();
+      removeTypingIndicator();
+      addMessage('bot', data.reply || 'Sorry, something went wrong.');
+    } catch (err) {
+      removeTypingIndicator();
+      addMessage('bot', 'Connection error. Please try again.');
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>
